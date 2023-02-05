@@ -33,6 +33,42 @@ class EnvVariables implements Env {
   @IsString()
   @IsNotEmpty()
   API_MONGODB_URI!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  API_JWT_SECRET!: string;
+
+  @IsNumber()
+  @IsPositive()
+  API_ACCESS_TOKEN_EXPIRES_IN!: number;
+
+  @IsNumber()
+  @IsPositive()
+  API_REFRESH_TOKEN_EXPIRES_IN!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  API_SMTP_HOST!: string;
+
+  @IsNumber()
+  @IsPositive()
+  API_SMTP_PORT!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  API_SMTP_USER!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  API_SMTP_PASS!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  API_SMTP_FROM!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  API_WEB_BASE_URL!: string;
 }
 
 export const envValidate = (config: Record<string, unknown>): EnvVariables => {
