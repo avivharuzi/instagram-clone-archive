@@ -1,8 +1,19 @@
-import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Length,
+  Matches,
+  MaxLength,
+} from 'class-validator';
+
+import { PASSWORD_REGEX, USERNAME_REGEX } from '../users.const';
 
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
+  @Length(4, 20)
+  @Matches(USERNAME_REGEX)
   username!: string;
 
   @IsString()
@@ -13,5 +24,7 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
+  @Length(8, 20)
+  @Matches(PASSWORD_REGEX)
   password!: string;
 }

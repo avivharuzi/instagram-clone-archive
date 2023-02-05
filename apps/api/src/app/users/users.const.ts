@@ -3,6 +3,11 @@ import { BadRequestException } from '@nestjs/common';
 import { UserDocument, UserStatus } from './schemas';
 import { UserPublic } from './user.model';
 
+export const PASSWORD_REGEX =
+  /((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/;
+
+export const USERNAME_REGEX = /^([a-z0-9]|[-._](?![-._])).*$/;
+
 export const validateUserStatusIsPending = (user: UserDocument): void => {
   if (user.status !== UserStatus.Pending) {
     throw new BadRequestException(

@@ -8,7 +8,10 @@ import { hashPassword } from '../shared';
 import { TokensService, TokenType } from '../tokens';
 import { CreateUserDto } from './dto';
 import { UserDocument, UserModel, UserStatus } from './schemas';
-import { validateUserStatusIsPending } from './users.const';
+import {
+  validateUserStatusIsActive,
+  validateUserStatusIsPending,
+} from './users.const';
 
 @Injectable()
 export class UsersService {
@@ -45,7 +48,7 @@ export class UsersService {
   }
 
   async verifyUser(token: string): Promise<void> {
-    const tokenDetails = await this.tokensService.getTokenByTokenAndValidate(
+    const tokenDetails = await this.tokensService.getTokenAndValidate(
       token,
       TokenType.UserVerification
     );
@@ -61,7 +64,9 @@ export class UsersService {
     }
 
     await this.userModel.findByIdAndUpdate(user.id, {
-      status: UserStatus.Active,
+      $set: {
+        status: UserStatus.Active,
+      },
     });
 
     await this.tokensService.deleteToken(tokenDetails.id);
@@ -70,10 +75,11 @@ export class UsersService {
   async resendUserVerification(email: string): Promise<void> {
     const user = await this.getUserByEmailAndValidate(email);
 
+    // Check user is pending.
     validateUserStatusIsPending(user);
 
     const tokenDetails =
-      await this.tokensService.getTokenByUserIdAndCreateOrUpdateToken(
+      await this.tokensService.getTokenByUserIdAndCreateOrUpdate(
         user.id,
         TokenType.UserVerification
       );
@@ -86,10 +92,11 @@ export class UsersService {
   async forgotPassword(email: string): Promise<void> {
     const user = await this.getUserByEmailAndValidate(email);
 
-    validateUserStatusIsPending(user);
+    // Check user is active.
+    validateUserStatusIsActive(user);
 
     const tokenDetails =
-      await this.tokensService.getTokenByUserIdAndCreateOrUpdateToken(
+      await this.tokensService.getTokenByUserIdAndCreateOrUpdate(
         user.id,
         TokenType.PasswordReset
       );
@@ -100,14 +107,14 @@ export class UsersService {
   }
 
   async checkResetPassword(token: string): Promise<void> {
-    await this.tokensService.getTokenByTokenAndValidate(
+    await this.tokensService.getTokenAndValidate(
       token,
       TokenType.PasswordReset
     );
   }
 
   async resetPassword(token: string, password: string): Promise<void> {
-    const tokenDetails = await this.tokensService.getTokenByTokenAndValidate(
+    const tokenDetails = await this.tokensService.getTokenAndValidate(
       token,
       TokenType.PasswordReset
     );
@@ -122,7 +129,9 @@ export class UsersService {
     const passwordHashed = await hashPassword(password);
 
     await this.userModel.findByIdAndUpdate(id, {
-      password: passwordHashed,
+      $set: {
+        password: passwordHashed,
+      },
     });
   }
 

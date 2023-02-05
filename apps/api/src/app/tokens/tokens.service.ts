@@ -29,14 +29,16 @@ export class TokensService {
       .findByIdAndUpdate(
         id,
         {
-          token,
+          $set: {
+            token,
+          },
         },
         { new: true }
       )
       .populate('user');
   }
 
-  async getTokenByType(
+  async getToken(
     token: string,
     type: TokenType
   ): Promise<TokenDocument | null> {
@@ -48,15 +50,15 @@ export class TokensService {
       .populate('user');
   }
 
-  async getTokenByTokenAndValidate(
+  async getTokenAndValidate(
     token: string,
     type: TokenType
   ): Promise<TokenDocument> {
-    const details = await this.getTokenByType(token, type);
+    const details = await this.getToken(token, type);
 
     if (!details || isDateExpired(details.expiresAt)) {
       throw new BadRequestException(
-        'We were unable to find a valid token. Your token my have expired.'
+        'We were unable to find a valid token. Your token my have expired'
       );
     }
 
@@ -75,7 +77,7 @@ export class TokensService {
       .populate('user');
   }
 
-  async getTokenByUserIdAndCreateOrUpdateToken(
+  async getTokenByUserIdAndCreateOrUpdate(
     userId: string,
     type: TokenType
   ): Promise<TokenDocument | null> {
@@ -90,12 +92,5 @@ export class TokensService {
 
   async deleteToken(id: string): Promise<void> {
     await this.tokenModel.findByIdAndDelete(id);
-  }
-
-  async deleteTokenByToken(token: string, type: TokenType): Promise<void> {
-    await this.tokenModel.findOneAndDelete({
-      token,
-      type,
-    });
   }
 }

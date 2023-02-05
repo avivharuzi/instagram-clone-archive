@@ -1,7 +1,8 @@
-import { Body, Controller, Param, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
-import { WithoutAuth } from './auth.const';
+import { getUserPublic, UserDocument, UserPublic } from '../users';
+import { User, WithoutAuth } from './auth.const';
 import { AuthService } from './auth.service';
 import {
   ForgotPasswordDto,
@@ -76,5 +77,11 @@ export class AuthController {
     const user = await this.authService.login(res, loginDto);
 
     res.send(user);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  @Get('user')
+  user(@User() user: UserDocument): UserPublic {
+    return getUserPublic(user);
   }
 }
