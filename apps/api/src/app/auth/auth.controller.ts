@@ -61,7 +61,7 @@ export class AuthController {
 
   @WithoutAuth()
   @Post('reset-password/:token')
-  resetPassword(
+  async resetPassword(
     @Param('token') token: string,
     @Body() resetPasswordDto: ResetPasswordDto
   ): Promise<void> {

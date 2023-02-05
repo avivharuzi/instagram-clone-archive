@@ -48,14 +48,17 @@ export class AuthGuard implements CanActivate {
       [context.getHandler(), context.getClass()]
     );
 
+    // If specify no authentication, but we have user it will be forbidden.
     if (withoutAuth && user) {
       throw new ForbiddenException();
     }
 
+    // If specify no authentication, and we don't have user everything is ok.
     if (withoutAuth) {
       return true;
     }
 
+    // No user, unauthorized.
     if (!user) {
       throw new UnauthorizedException();
     }
@@ -110,16 +113,17 @@ export class AuthGuard implements CanActivate {
 
       // If we don't have new accessToken clear cookies.
       if (!newAccessToken) {
-        res.clearCookie(AUTH_COOKIE_ACCESS_TOKEN);
-        res.clearCookie(AUTH_COOKIE_REFRESH_TOKEN);
+        this.authService.removeLoginTokensFromCookie(res);
 
         return null;
       }
 
       // Assign the new accessToken.
-      res.setCookie(AUTH_COOKIE_ACCESS_TOKEN, newAccessToken.accessToken);
-      // eslint-disable-next-line prefer-destructuring
-      userId = newAccessToken.userId;
+      this.authService.storeLoginTokensInCookie(res, {
+        accessToken: newAccessToken.accessToken,
+      });
+
+      userId = newAccessToken.user.id;
     }
 
     // Try to extract user from database.

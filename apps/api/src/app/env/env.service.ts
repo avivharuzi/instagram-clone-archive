@@ -1,3 +1,4 @@
+import { CookieSerializeOptions } from '@fastify/cookie';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -33,6 +34,16 @@ export class EnvService {
 
   get cookieSecret(): string {
     return this.getValue('API_COOKIE_SECRET');
+  }
+
+  get cookieOptions(): CookieSerializeOptions {
+    return this.isProduction
+      ? {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+        }
+      : {};
   }
 
   get mongodbURI(): string {

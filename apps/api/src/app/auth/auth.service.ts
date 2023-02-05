@@ -18,6 +18,7 @@ import {
   AUTH_COOKIE_REFRESH_TOKEN,
 } from './auth.const';
 import {
+  AuthCreateNewAccessTokenResponse,
   AuthJWTPayload,
   AuthLoginException,
   AuthLoginTokens,
@@ -54,8 +55,7 @@ export class AuthService {
       ],
     });
 
-    res.clearCookie(AUTH_COOKIE_ACCESS_TOKEN);
-    res.clearCookie(AUTH_COOKIE_REFRESH_TOKEN);
+    this.removeLoginTokensFromCookie(res);
   }
 
   async signup(signupDto: SignupDto): Promise<void> {
@@ -108,21 +108,17 @@ export class AuthService {
     validateUserStatusIsActive(userWithSameEmail);
 
     // Create tokens and store in database.
-    const { accessToken, refreshToken } = await this.createLoginTokens(
-      userWithSameEmail
-    );
+    const loginTokens = await this.createLoginTokens(userWithSameEmail);
 
     // Attach tokens to cookies.
-    res.setCookie(AUTH_COOKIE_ACCESS_TOKEN, accessToken);
-    res.setCookie(AUTH_COOKIE_REFRESH_TOKEN, refreshToken);
+    this.storeLoginTokensInCookie(res, loginTokens);
 
     return getUserPublic(userWithSameEmail);
   }
 
-  async tryToCreateNewAccessToken(tokens: AuthLoginTokens): Promise<{
-    userId: string;
-    accessToken: string;
-  } | null> {
+  async tryToCreateNewAccessToken(
+    tokens: AuthLoginTokens
+  ): Promise<AuthCreateNewAccessTokenResponse | null> {
     const authSession = await this.authSessionModel
       .findOne({
         accessToken: tokens.accessToken,
@@ -130,6 +126,7 @@ export class AuthService {
       })
       .populate('user');
 
+    // Not found auth session.
     if (!authSession) {
       return null;
     }
@@ -151,9 +148,35 @@ export class AuthService {
     });
 
     return {
-      userId: authSession.user.id,
+      user: authSession.user,
       accessToken,
     };
+  }
+
+  storeLoginTokensInCookie(
+    res: FastifyReply,
+    { accessToken, refreshToken }: Partial<AuthLoginTokens>
+  ): void {
+    if (accessToken) {
+      res.setCookie(
+        AUTH_COOKIE_ACCESS_TOKEN,
+        accessToken,
+        this.envService.cookieOptions
+      );
+    }
+
+    if (refreshToken) {
+      res.setCookie(
+        AUTH_COOKIE_REFRESH_TOKEN,
+        refreshToken,
+        this.envService.cookieOptions
+      );
+    }
+  }
+
+  removeLoginTokensFromCookie(res: FastifyReply): void {
+    res.clearCookie(AUTH_COOKIE_ACCESS_TOKEN, this.envService.cookieOptions);
+    res.clearCookie(AUTH_COOKIE_REFRESH_TOKEN, this.envService.cookieOptions);
   }
 
   private async createLoginTokens(
