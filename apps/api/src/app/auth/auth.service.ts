@@ -141,7 +141,6 @@ export class AuthService {
 
     const accessToken = await this.createAccessToken(authSession.user);
 
-    // Update the access token.
     await this.authSessionModel.findByIdAndUpdate(authSession.id, {
       $set: {
         accessToken,
